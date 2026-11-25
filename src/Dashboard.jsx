@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import Sidebar from "./Sidebar.jsx";
-import { titleMap } from "./data.js";
+import { useState } from "react";
+import Sidebar, { NAV_BY_ROLE } from "./Sidebar.jsx";
+import { titleMap, regions } from "./data.js";
+import { useLang, LangSwitcher } from "./i18n.jsx";
 import Overview from "./views/Overview.jsx";
 import Inventory from "./views/Inventory.jsx";
 import Emergency from "./views/Emergency.jsx";
@@ -9,18 +10,18 @@ import Forecast from "./views/Forecast.jsx";
 import Donors from "./views/Donors.jsx";
 import DonorApp from "./views/DonorApp.jsx";
 import BuildPlan from "./views/BuildPlan.jsx";
-
-const REGION_CHIPS = [
-  { id: "all", label: "All regions" },
-  { id: "jk", label: "Jammu & Kashmir" },
-  { id: "ladakh", label: "Ladakh" },
-  { id: "punjab", label: "Punjab" },
-];
+import DonorHome from "./views/DonorHome.jsx";
+import Camps from "./views/Camps.jsx";
+import Centres from "./views/Centres.jsx";
 
 export default function Dashboard({ user, onLogout, toast }) {
-  const [displayView, setDisplayView] = useState("overview");
+  const { t } = useLang();
+  const isDonor = user?.role !== "centre";
+  const allowed = (NAV_BY_ROLE[user?.role] || NAV_BY_ROLE.donor).flatMap((s) => s.items.map((i) => i.view));
+  const [displayView, setDisplayView] = useState(allowed[0]);
   const [transClass, setTransClass] = useState("");
-  const [regionFilter, setRegionFilter] = useState("all");
+  // donors start scoped to their own state; centre staff see the whole network
+  const [regionFilter, setRegionFilter] = useState(isDonor && user?.region ? user.region : "all");
 
   function setView(name) {
     if (name === displayView) return;
@@ -34,50 +35,51 @@ export default function Dashboard({ user, onLogout, toast }) {
     }, 150);
   }
 
-  // if a non-centre user is somehow on the centre-only Build Plan view, bounce back
-  useEffect(() => {
-    if (displayView === "plan" && user?.role !== "centre") {
-      setDisplayView("overview");
-      setTransClass("");
-    }
-  }, [user, displayView]);
-
-  const [title, subtitle] = titleMap[displayView] || titleMap.overview;
+  // never render a view that doesn't belong to this role
+  const view = allowed.includes(displayView) ? displayView : allowed[0];
+  const [title, subtitle] = titleMap[view];
+  const showRegions = ["overview", "inventory", "donors", "camps", "centres"].includes(view);
 
   return (
     <div className="app">
-      <Sidebar view={displayView} setView={setView} user={user} onLogout={onLogout} />
+      <Sidebar view={view} setView={setView} user={user} onLogout={onLogout} />
       <main className="main">
         <div className="topbar">
           <div>
-            <h1>{title}</h1>
-            <div className="sub">{subtitle}</div>
+            <h1>{t(title)}</h1>
+            <div className="sub">{t(subtitle)}</div>
           </div>
           <div className="topbar-spacer" />
-          <div className="chip-row">
-            {REGION_CHIPS.map((r) => (
-              <button
-                key={r.id}
-                className={`chip${regionFilter === r.id ? " active" : ""}`}
-                onClick={() => setRegionFilter(r.id)}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-          <span className="badge demo">⚗️ Static demo · synthetic data</span>
+          {showRegions && (
+            <div className="chip-row">
+              {[{ id: "all", name: "All regions" }, ...regions].map((r) => (
+                <button
+                  key={r.id}
+                  className={`chip${regionFilter === r.id ? " active" : ""}`}
+                  onClick={() => setRegionFilter(r.id)}
+                >
+                  {t(r.name)}
+                </button>
+              ))}
+            </div>
+          )}
+          <span className="badge demo">⚗️ {t("Static demo · synthetic data")}</span>
+          <LangSwitcher />
         </div>
 
         <div className="content">
           <section className={`view ${transClass}`.trim()}>
-            {displayView === "overview" && <Overview regionFilter={regionFilter} setView={setView} />}
-            {displayView === "inventory" && <Inventory />}
-            {displayView === "emergency" && <Emergency user={user} toast={toast} />}
-            {displayView === "map" && <SupplyMap />}
-            {displayView === "forecast" && <Forecast />}
-            {displayView === "donors" && <Donors user={user} toast={toast} />}
-            {displayView === "app" && <DonorApp />}
-            {displayView === "plan" && user?.role === "centre" && <BuildPlan />}
+            {view === "overview" && <Overview regionFilter={regionFilter} setView={setView} />}
+            {view === "inventory" && <Inventory regionFilter={regionFilter} />}
+            {view === "emergency" && <Emergency toast={toast} />}
+            {view === "map" && <SupplyMap />}
+            {view === "forecast" && <Forecast />}
+            {view === "donors" && <Donors regionFilter={regionFilter} toast={toast} />}
+            {view === "app" && <DonorApp />}
+            {view === "plan" && <BuildPlan />}
+            {view === "myDash" && <DonorHome user={user} setView={setView} />}
+            {view === "camps" && <Camps regionFilter={regionFilter} toast={toast} />}
+            {view === "centres" && <Centres regionFilter={regionFilter} />}
           </section>
         </div>
       </main>
