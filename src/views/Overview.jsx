@@ -1,76 +1,79 @@
-import { regions, groupMix, activity } from "../data.js";
+import { regions, groupMix, activity, camps } from "../data.js";
+import { useLang } from "../i18n.jsx";
+
+const STATUS_PILL = { critical: ["bad", "Critical"], low: ["warn", "Low"], ok: ["ok", "Healthy"] };
 
 export default function Overview({ regionFilter, setView }) {
+  const { t } = useLang();
   const filteredRegions = regions.filter((r) => regionFilter === "all" || regionFilter === r.id);
+  const sum = (k) => filteredRegions.reduce((n, r) => n + r[k], 0);
+  const activeCamps = camps.filter((c) => c.status !== "Completed" && (regionFilter === "all" || c.region === regionFilter)).length;
 
   return (
     <>
       <div className="alert-banner">
-        🔴 <strong>Critical:</strong>&nbsp;O‑negative stock in Ladakh is 2 units against a 15‑unit reorder level.
-        <button onClick={() => setView("emergency")}>View emergency request →</button>
+        🔴 <strong>{t("Critical:")}</strong>&nbsp;{t("O‑negative stock in Ladakh is 2 units against a 15‑unit reorder level.")}
+        <button onClick={() => setView("emergency")}>{t("View emergency request →")}</button>
       </div>
 
       <div className="grid cols-5">
         <div className="kpi">
-          <div className="num">4,812</div>
-          <div className="lbl">Units in stock, network‑wide</div>
-          <div className="delta up">▲ 3.1% vs last week</div>
+          <div className="num">{sum("units").toLocaleString()}</div>
+          <div className="lbl">{t("Units in stock")}</div>
+          <div className="delta up">▲ 3.1% {t("vs last week")}</div>
         </div>
         <div className="kpi">
-          <div className="num">18</div>
-          <div className="lbl">Connected blood banks</div>
-          <div className="delta">3 states · 1 shared instance</div>
+          <div className="num">{sum("banks")}</div>
+          <div className="lbl">{t("Connected blood banks")}</div>
+          <div className="delta">{t("{n} states / UTs · 1 shared instance", { n: filteredRegions.length })}</div>
         </div>
         <div className="kpi">
-          <div className="num">3</div>
-          <div className="lbl">Critical shortage alerts</div>
-          <div className="delta down">▲ since yesterday</div>
+          <div className="num">{sum("critical")}</div>
+          <div className="lbl">{t("Critical shortage alerts")}</div>
+          <div className="delta down">▲ {t("since yesterday")}</div>
         </div>
         <div className="kpi">
           <div className="num">46</div>
-          <div className="lbl">Units expiring in 72h</div>
-          <div className="delta down">FIFO redistribution pending</div>
+          <div className="lbl">{t("Units expiring in 72h")}</div>
+          <div className="delta down">{t("FIFO redistribution pending")}</div>
         </div>
         <div className="kpi">
-          <div className="num">12</div>
-          <div className="lbl">Camps running this month</div>
-          <div className="delta up">incl. Amarnath Yatra route</div>
+          <div className="num">{activeCamps}</div>
+          <div className="lbl">{t("Camps upcoming or running")}</div>
+          <div className="delta up">{t("incl. Amarnath Yatra route")}</div>
         </div>
       </div>
 
       <div className="two-col">
         <div className="panel">
           <div className="panel-head">
-            <h3>Stock by region</h3>
-            <span className="hint">Tap a region chip above to filter every screen</span>
+            <h3>{t("Stock by region")}</h3>
+            <span className="hint">{t("Tap a region chip above to filter")}</span>
           </div>
           <div className="table-wrap">
             <table className="data">
               <thead>
-                <tr><th>Region</th><th>Blood banks</th><th>Units in stock</th><th>Critical alerts</th><th>Status</th></tr>
+                <tr><th>{t("Region")}</th><th>{t("Blood banks")}</th><th>{t("Units in stock")}</th><th>{t("Critical alerts")}</th><th>{t("Status")}</th></tr>
               </thead>
               <tbody>
-                {filteredRegions.map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.name}</td>
-                    <td>{r.banks}</td>
-                    <td>{r.units.toLocaleString()}</td>
-                    <td>{r.critical}</td>
-                    <td>
-                      {r.status === "critical" ? (
-                        <span className="pill bad">Critical</span>
-                      ) : (
-                        <span className="pill ok">Healthy</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {filteredRegions.map((r) => {
+                  const [cls, label] = STATUS_PILL[r.status];
+                  return (
+                    <tr key={r.id}>
+                      <td>{t(r.name)}</td>
+                      <td>{r.banks}</td>
+                      <td>{r.units.toLocaleString()}</td>
+                      <td>{r.critical}</td>
+                      <td><span className={`pill ${cls}`}>{t(label)}</span></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
         <div className="panel">
-          <div className="panel-head"><h3>Blood group mix, network‑wide</h3></div>
+          <div className="panel-head"><h3>{t("Blood group mix, network‑wide")}</h3></div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {groupMix.map((g) => (
               <div key={g.g}>
@@ -92,16 +95,16 @@ export default function Overview({ regionFilter, setView }) {
 
       <div className="panel">
         <div className="panel-head">
-          <h3>Recent activity</h3>
-          <span className="hint">Latest actions synced across the network</span>
+          <h3>{t("Recent activity")}</h3>
+          <span className="hint">{t("Latest actions synced across the network")}</span>
         </div>
         <div className="timeline">
           {activity.map((a, i) => (
             <div className="t-row" key={i}>
               <div className="t-dot" style={{ background: a.c }} />
               <div className="t-body">
-                <div className="t-title">{a.t}</div>
-                <div className="t-meta">{a.m}</div>
+                <div className="t-title">{t(a.t)}</div>
+                <div className="t-meta">{t(a.m)}</div>
               </div>
             </div>
           ))}

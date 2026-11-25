@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { demoUsers } from "./data.js";
+import { demoUsers, regions, groupMix } from "./data.js";
+import { useLang, LangSwitcher } from "./i18n.jsx";
 import { IconOverview, IconEmergency, IconHeart, IconForecast, IconFile, IconSearch, IconTruck, IconCheckCircle } from "./icons.jsx";
 
 const TAGLINES = [
@@ -45,6 +46,7 @@ function RevealSection({ className = "", children }) {
 }
 
 export default function AuthPage({ auth, toast }) {
+  const { t } = useLang();
   const [mode, setMode] = useState("login");
   const [loginTab, setLoginTab] = useState("centre");
   const [loginEmail, setLoginEmail] = useState("");
@@ -55,6 +57,8 @@ export default function AuthPage({ auth, toast }) {
   const [suPassword, setSuPassword] = useState("");
   const [suRole, setSuRole] = useState("centre");
   const [suFacility, setSuFacility] = useState("");
+  const [suRegion, setSuRegion] = useState(regions[0].id);
+  const [suGroup, setSuGroup] = useState(groupMix[0].g);
   const [signupError, setSignupError] = useState("");
   const [taglineIdx, setTaglineIdx] = useState(0);
   const heroRef = useRef(null);
@@ -76,8 +80,7 @@ export default function AuthPage({ auth, toast }) {
     setMode("signup");
   }
 
-  function fillDemo() {
-    const demo = loginTab === "centre" ? demoUsers[0] : demoUsers[1];
+  function fillDemo(demo) {
     setLoginEmail(demo.email);
     setLoginPassword(demo.password);
   }
@@ -86,51 +89,53 @@ export default function AuthPage({ auth, toast }) {
     e.preventDefault();
     const res = auth.login(loginEmail, loginPassword, loginTab);
     if (!res.ok) {
-      setLoginError(res.error);
+      setLoginError(t(res.error));
       return;
     }
-    toast(`Logged in as ${res.user.name}.`);
+    toast(t("Logged in as {name}.", { name: res.user.name }));
   }
 
   function handleSignup(e) {
     e.preventDefault();
-    const res = auth.signup({ name: suName, email: suEmail, password: suPassword, role: suRole, facility: suFacility });
+    const res = auth.signup({ name: suName, email: suEmail, password: suPassword, role: suRole, facility: suFacility, region: suRegion, bloodGroup: suGroup });
     if (!res.ok) {
-      setSignupError(res.error);
+      setSignupError(t(res.error));
       return;
     }
-    toast(`Account created — logged in as ${res.user.name}.`);
+    toast(t("Account created — logged in as {name}.", { name: res.user.name }));
   }
 
   function scrollToLogin() {
     heroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const demoLabel = loginTab === "centre" ? "Blood Centre staff" : "Donor";
-  const demoEmail = loginTab === "centre" ? demoUsers[0].email : demoUsers[1].email;
+  const demoLabel = loginTab === "centre" ? t("Blood Centre staff") : t("Donor");
+  const demoAccounts = demoUsers.filter((u) => u.role === loginTab);
 
   return (
     <div className="auth-page">
       <div className="auth-hero-wrap" ref={heroRef}>
+        <div className="auth-lang-bar">
+          <LangSwitcher />
+        </div>
         <div className="auth-page-inner">
           <div className="auth-brand-panel">
             <div className="auth-blob" style={{ width: 220, height: 220, background: "#fff", top: -60, right: -50 }} />
             <div className="auth-blob" style={{ width: 160, height: 160, background: "#F2D6E0", bottom: -40, left: -30 }} />
             <div className="brand-mark">🩸</div>
-            <h1>Blood Link</h1>
+            <h1>{t("Blood Link")}</h1>
             <p>
-              Regional blood supply coordination across Jammu &amp; Kashmir, Ladakh and Punjab — one shared,
-              real-time picture for every blood centre and donor.
+              {t("Regional blood supply coordination across Jammu & Kashmir, Ladakh, Punjab, Himachal Pradesh and Haryana — one shared, real-time picture for every blood centre and donor.")}
             </p>
             <div className="auth-tagline-box">
               <p className="auth-tagline" key={taglineIdx}>
-                {TAGLINES[taglineIdx]}
+                {t(TAGLINES[taglineIdx])}
               </p>
             </div>
             <ul className="auth-points">
-              <li>Live network-wide stock visibility</li>
-              <li>Emergency request routing between banks</li>
-              <li>Cold-chain monitoring from collection to delivery</li>
+              <li>{t("Live network-wide stock visibility")}</li>
+              <li>{t("Emergency request routing between banks")}</li>
+              <li>{t("Cold-chain monitoring from collection to delivery")}</li>
             </ul>
           </div>
 
@@ -138,8 +143,8 @@ export default function AuthPage({ auth, toast }) {
             {mode === "login" ? (
               <div>
                 <div className="auth-head">
-                  <h2>Log in to Blood Link</h2>
-                  <p>Choose the login that matches your account</p>
+                  <h2>{t("Log in to Blood Link")}</h2>
+                  <p>{t("Choose the login that matches your account")}</p>
                 </div>
                 <div className="auth-tabs">
                   <button
@@ -147,20 +152,20 @@ export default function AuthPage({ auth, toast }) {
                     className={`auth-tab${loginTab === "centre" ? " active" : ""}`}
                     onClick={() => setLoginTab("centre")}
                   >
-                    Blood Centre Login
+                    {t("Blood Centre Login")}
                   </button>
                   <button
                     type="button"
                     className={`auth-tab${loginTab === "donor" ? " active" : ""}`}
                     onClick={() => setLoginTab("donor")}
                   >
-                    Donor Login
+                    {t("Donor Login")}
                   </button>
                 </div>
                 {loginError && <div className="auth-error">{loginError}</div>}
                 <form onSubmit={handleLogin}>
                   <div className="field">
-                    <label>Email</label>
+                    <label>{t("Email")}</label>
                     <input
                       type="email"
                       required
@@ -170,7 +175,7 @@ export default function AuthPage({ auth, toast }) {
                     />
                   </div>
                   <div className="field">
-                    <label>Password</label>
+                    <label>{t("Password")}</label>
                     <input
                       type="password"
                       required
@@ -180,76 +185,96 @@ export default function AuthPage({ auth, toast }) {
                     />
                   </div>
                   <button className="btn primary" type="submit" style={{ width: "100%" }}>
-                    Log in
+                    {t("Log in")}
                   </button>
                 </form>
                 <div className="auth-demo-hint">
-                  <div className="dh-label">{demoLabel} demo account (password: demo123)</div>
-                  <button type="button" className="auth-demo-row" onClick={fillDemo}>
-                    <span>{demoLabel}</span>
-                    <span className="email">{demoEmail}</span>
-                  </button>
+                  <div className="dh-label">{t("{role} demo accounts (password: demo123)", { role: demoLabel })}</div>
+                  {demoAccounts.map((u) => (
+                    <button key={u.id} type="button" className="auth-demo-row" onClick={() => fillDemo(u)}>
+                      <span>{u.name}</span>
+                      <span className="email">{u.email}</span>
+                    </button>
+                  ))}
                 </div>
                 <div className="auth-switch">
-                  New here?{" "}
+                  {t("New here?")}{" "}
                   <a onClick={openSignup} role="button" tabIndex={0}>
-                    Create an account
+                    {t("Create an account")}
                   </a>
                 </div>
               </div>
             ) : (
               <div>
                 <div className="auth-head">
-                  <h2>Create your Blood Link account</h2>
-                  <p>Stored only in this browser — nothing is sent anywhere</p>
+                  <h2>{t("Create your Blood Link account")}</h2>
+                  <p>{t("Stored only in this browser — nothing is sent anywhere")}</p>
                 </div>
                 {signupError && <div className="auth-error">{signupError}</div>}
                 <form onSubmit={handleSignup}>
                   <div className="field">
-                    <label>Full name</label>
+                    <label>{t("Full name")}</label>
                     <input type="text" required value={suName} onChange={(e) => setSuName(e.target.value)} />
                   </div>
                   <div className="field">
-                    <label>Email</label>
+                    <label>{t("Email")}</label>
                     <input type="email" required value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
                   </div>
                   <div className="field">
-                    <label>Password</label>
+                    <label>{t("Password")}</label>
                     <input
                       type="password"
                       required
                       minLength={4}
-                      placeholder="At least 4 characters"
+                      placeholder={t("At least 4 characters")}
                       value={suPassword}
                       onChange={(e) => setSuPassword(e.target.value)}
                     />
                   </div>
                   <div className="field">
-                    <label>Account type</label>
+                    <label>{t("Account type")}</label>
                     <select value={suRole} onChange={(e) => setSuRole(e.target.value)}>
-                      <option value="centre">Blood Centre / Hospital staff</option>
-                      <option value="donor">Donor</option>
+                      <option value="centre">{t("Blood Centre / Hospital staff")}</option>
+                      <option value="donor">{t("Donor")}</option>
                     </select>
                   </div>
+                  <div className="field">
+                    <label>{t("State / UT")}</label>
+                    <select value={suRegion} onChange={(e) => setSuRegion(e.target.value)}>
+                      {regions.map((r) => (
+                        <option key={r.id} value={r.id}>{t(r.name)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {suRole === "donor" && (
+                    <div className="field">
+                      <label>{t("Blood group")}</label>
+                      <select value={suGroup} onChange={(e) => setSuGroup(e.target.value)}>
+                        {groupMix.map((g) => (
+                          <option key={g.g} value={g.g}>{g.g}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   {suRole !== "donor" && (
                     <div className="field">
-                      <label>Facility / blood centre name</label>
+                      <label>{t("Facility / blood centre name")}</label>
                       <input
                         type="text"
-                        placeholder="e.g. GMC Jammu Blood Bank"
+                        placeholder={t("e.g. GMC Jammu Blood Bank")}
                         value={suFacility}
                         onChange={(e) => setSuFacility(e.target.value)}
                       />
                     </div>
                   )}
                   <button className="btn primary" type="submit" style={{ width: "100%" }}>
-                    Create account
+                    {t("Create account")}
                   </button>
                 </form>
                 <div className="auth-switch">
-                  Already registered?{" "}
+                  {t("Already registered?")}{" "}
                   <a onClick={() => openLogin()} role="button" tabIndex={0}>
-                    Log in
+                    {t("Log in")}
                   </a>
                 </div>
               </div>
@@ -259,39 +284,38 @@ export default function AuthPage({ auth, toast }) {
       </div>
 
       <RevealSection>
-        <h2>What you can do here</h2>
+        <h2>{t("What you can do here")}</h2>
         <p className="as-sub">
-          Every card below is a working part of the platform once you're signed in — log in or create an account
-          above to open any of them.
+          {t("Every card below is a working part of the platform once you're signed in — log in or create an account above to open any of them.")}
         </p>
         <div className="as-services">
           <div className="as-service-card" onClick={scrollToLogin}>
             <div className="as-service-icon">
               <IconOverview size={20} />
             </div>
-            <h3>Network Overview</h3>
-            <p>Live stock, by region and blood group, across every connected centre.</p>
+            <h3>{t("Network Overview")}</h3>
+            <p>{t("Live stock, by region and blood group, across every connected centre.")}</p>
           </div>
           <div className="as-service-card" onClick={scrollToLogin}>
             <div className="as-service-icon">
               <IconEmergency size={20} />
             </div>
-            <h3>Emergency Request</h3>
-            <p>Route an urgent request to the nearest matching source in minutes.</p>
+            <h3>{t("Emergency Request")}</h3>
+            <p>{t("Route an urgent request to the nearest matching source in minutes.")}</p>
           </div>
           <div className="as-service-card" onClick={scrollToLogin}>
             <div className="as-service-icon">
               <IconHeart size={20} />
             </div>
-            <h3>Donor Network &amp; Camps</h3>
-            <p>Recall eligible donors and schedule voluntary donation camps.</p>
+            <h3>{t("Donor Network & Camps")}</h3>
+            <p>{t("Recall eligible donors and schedule voluntary donation camps.")}</p>
           </div>
           <div className="as-service-card" onClick={scrollToLogin}>
             <div className="as-service-icon">
               <IconForecast size={20} />
             </div>
-            <h3>Demand Forecast</h3>
-            <p>A 7-day shortage projection, region by region.</p>
+            <h3>{t("Demand Forecast")}</h3>
+            <p>{t("A 7-day shortage projection, region by region.")}</p>
           </div>
         </div>
       </RevealSection>
@@ -311,59 +335,56 @@ export default function AuthPage({ auth, toast }) {
             </svg>
           </div>
           <div>
-            <h2>Who can register?</h2>
+            <h2>{t("Who can register?")}</h2>
             <p className="as-sub">
-              Blood centre staff, hospital teams, and individual donors across Jammu &amp; Kashmir, Ladakh and
-              Punjab can all create an account. Each one sees a view built for their role — a blood bank manages
-              stock and approves requests, a donor keeps a simple profile and camp reminders.
+              {t("Blood centre staff, hospital teams, and individual donors across Jammu & Kashmir, Ladakh, Punjab, Himachal Pradesh and Haryana can all create an account. Each one sees a view built for their role — a blood bank manages stock and approves requests, a donor keeps a simple profile and camp reminders.")}
             </p>
             <ul className="auth-points" style={{ color: "var(--text)" }}>
-              <li style={{ color: "var(--text)" }}>Free to register, no approval wait for this demo</li>
-              <li style={{ color: "var(--text)" }}>Role-based access — see only what's relevant to you</li>
-              <li style={{ color: "var(--text)" }}>All data stays local to your browser</li>
+              <li style={{ color: "var(--text)" }}>{t("Free to register, no approval wait for this demo")}</li>
+              <li style={{ color: "var(--text)" }}>{t("Role-based access — see only what's relevant to you")}</li>
+              <li style={{ color: "var(--text)" }}>{t("All data stays local to your browser")}</li>
             </ul>
           </div>
         </div>
       </RevealSection>
 
       <RevealSection>
-        <h2>How it works</h2>
-        <p className="as-sub">The same flow this prototype is built to prove out, end to end.</p>
+        <h2>{t("How it works")}</h2>
+        <p className="as-sub">{t("The same flow this prototype is built to prove out, end to end.")}</p>
         <div className="as-steps">
           <div className="as-step">
             <div className="as-step-icon">
               <IconFile />
             </div>
-            <h4>Request logged</h4>
-            <p>Hospital flags a need, routine or emergency</p>
+            <h4>{t("Request logged")}</h4>
+            <p>{t("Hospital flags a need, routine or emergency")}</p>
           </div>
           <div className="as-step">
             <div className="as-step-icon">
               <IconSearch />
             </div>
-            <h4>Source matched</h4>
-            <p>Nearest stock found by group &amp; route status</p>
+            <h4>{t("Source matched")}</h4>
+            <p>{t("Nearest stock found by group & route status")}</p>
           </div>
           <div className="as-step">
             <div className="as-step-icon">
               <IconTruck />
             </div>
-            <h4>Dispatched</h4>
-            <p>Cold-chain tracked in transit</p>
+            <h4>{t("Dispatched")}</h4>
+            <p>{t("Cold-chain tracked in transit")}</p>
           </div>
           <div className="as-step">
             <div className="as-step-icon">
               <IconCheckCircle />
             </div>
-            <h4>Delivered</h4>
-            <p>Confirmed and issued to patient</p>
+            <h4>{t("Delivered")}</h4>
+            <p>{t("Confirmed and issued to patient")}</p>
           </div>
         </div>
       </RevealSection>
 
       <div className="auth-landing-footer">
-        Blood Link is an independent demo prototype — not affiliated with any government department. All data shown
-        is simulated and stored locally in your browser.
+        {t("Blood Link is an independent demo prototype — not affiliated with any government department. All data shown is simulated and stored locally in your browser.")}
       </div>
     </div>
   );

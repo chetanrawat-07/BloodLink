@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { demoUsers } from "./data.js";
 
 const USERS_KEY = "bloodlink_bl_users";
@@ -26,10 +26,10 @@ function uid() {
   return "u" + Math.random().toString(36).slice(2, 9);
 }
 
-function seedUsersIfEmpty() {
-  const users = lsGet(USERS_KEY, null);
-  if (users) return;
-  lsSet(USERS_KEY, demoUsers);
+// Always refresh the demo accounts (so old browsers pick up new demo fields), keep self-registered ones.
+function seedUsers() {
+  const own = lsGet(USERS_KEY, []).filter((u) => !demoUsers.some((d) => d.id === u.id));
+  lsSet(USERS_KEY, [...demoUsers, ...own]);
 }
 
 function getUsers() {
@@ -38,7 +38,7 @@ function getUsers() {
 
 export function useAuth() {
   const [session, setSessionState] = useState(() => {
-    seedUsersIfEmpty();
+    seedUsers();
     return lsGet(SESSION_KEY, null);
   });
 
@@ -54,7 +54,7 @@ export function useAuth() {
       const match = getUsers().find(
         (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password && u.role === role
       );
-      if (!match) return { ok: false, error: `No ${role === "centre" ? "Blood Centre" : "Donor"} account matches that email and password.` };
+      if (!match) return { ok: false, error: role === "centre" ? "No Blood Centre account matches that email and password." : "No Donor account matches that email and password." };
       setSession({ userId: match.id });
       return { ok: true, user: match };
     },
@@ -62,7 +62,7 @@ export function useAuth() {
   );
 
   const signup = useCallback(
-    ({ name, email, password, role, facility }) => {
+    ({ name, email, password, role, facility, region, bloodGroup }) => {
       const users = getUsers();
       const normalizedEmail = email.trim().toLowerCase();
       if (users.some((u) => u.email.toLowerCase() === normalizedEmail)) {
@@ -75,6 +75,8 @@ export function useAuth() {
         password,
         role,
         facility: role === "donor" ? null : facility.trim() || "Unnamed facility",
+        region,
+        ...(role === "donor" && { bloodGroup, history: [] }),
       };
       users.push(newUser);
       lsSet(USERS_KEY, users);
