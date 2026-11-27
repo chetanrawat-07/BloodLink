@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import SupplyChainPanels from "./SupplyChain.jsx";
 import { mapNodes, GOOGLE_MAPS_API_KEY } from "../data.js";
 import { useLang } from "../i18n.jsx";
 
@@ -49,7 +50,8 @@ function SchematicMap({ layer }) {
   );
 }
 
-export default function SupplyMap() {
+// Original corridor map (Google Maps / schematic) — kept unchanged below the new intelligence panels.
+function CorridorMap() {
   const { t } = useLang();
   const [layer, setLayer] = useState("road");
   const [mapMode, setMapMode] = useState("schematic");
@@ -184,6 +186,15 @@ export default function SupplyMap() {
           <span>✈️ {t("air transfer route")}</span>
         </div>
       </div>
+    </>
+  );
+}
+
+export default function SupplyMap(props) {
+  return (
+    <>
+      <SupplyChainPanels {...props} />
+      <CorridorMap />
     </>
   );
 }

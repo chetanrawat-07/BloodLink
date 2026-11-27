@@ -117,7 +117,7 @@ export const mapNodes = {
 };
 
 export const demoUsers = [
-  { id: "u1", name: "Imran Bhat", email: "centre@bloodlink.demo", password: "demo123", role: "centre", facility: "GMC Jammu Blood Bank", region: "jk" },
+  { id: "u1", name: "Imran Bhat", email: "centre@bloodlink.demo", password: "demo123", role: "centre", facility: "GMC Jammu Blood Bank", facId: "JK-JMU-GMC", region: "jk" },
   { id: "u2", name: "Tenzin Dolma", email: "donor@bloodlink.demo", password: "demo123", role: "donor", facility: null,
     region: "ladakh", bloodGroup: "O-", uid: "BL-DNR-00981", nextEligible: "13 Nov 2026",
     history: [
@@ -126,7 +126,7 @@ export const demoUsers = [
       { date: "11 Nov 2025", centre: "Leh winter drive", comp: "Whole Blood", status: "Completed" },
       { date: "20 Jun 2025", centre: "Kargil District Hospital", comp: "Platelets", status: "Completed" },
     ] },
-  { id: "u3", name: "Harpreet Kaur", email: "centre2@bloodlink.demo", password: "demo123", role: "centre", facility: "GMC Amritsar", region: "punjab" },
+  { id: "u3", name: "Harpreet Kaur", email: "centre2@bloodlink.demo", password: "demo123", role: "centre", facility: "GMC Amritsar", facId: "PB-ASR-GMC", region: "punjab" },
   { id: "u4", name: "Gurpreet Singh", email: "donor2@bloodlink.demo", password: "demo123", role: "donor", facility: null,
     region: "punjab", bloodGroup: "B+", uid: "BL-DNR-01310", nextEligible: "18 Oct 2026",
     history: [
@@ -139,14 +139,37 @@ export const demoUsers = [
     history: [
       { date: "09 Sep 2026", centre: "IGMC Shimla", comp: "Whole Blood", status: "Completed" },
     ] },
+  // ---- official roles (intelligence platform) ----
+  { id: "u6", name: "Dr. Neelam Gupta", email: "super@bloodlink.demo", password: "demo123", role: "super", facility: null, region: "all" },
+  { id: "u7", name: "Tsewang Dorjey", email: "ladakh.admin@bloodlink.demo", password: "demo123", role: "state", facility: null, region: "ladakh" },
+  { id: "u8", name: "Rakesh Sharma", email: "jammu.district@bloodlink.demo", password: "demo123", role: "district", facility: null, region: "jk", district: "jammu" },
+  { id: "u9", name: "Dr. Sonam Angmo", email: "hospital@bloodlink.demo", password: "demo123", role: "hospital", facility: "SNM Hospital, Leh", facId: "LA-LEH-SNM", region: "ladakh" },
+  { id: "u10", name: "Arvind Kumar", email: "official@bloodlink.demo", password: "demo123", role: "official", facility: null, region: "all" },
+  { id: "u11", name: "Padma Lhamo", email: "leh.bank@bloodlink.demo", password: "demo123", role: "centre", facility: "SNM Hospital, Leh", facId: "LA-LEH-SNM", region: "ladakh" },
 ];
 
 export const titleMap = {
-  overview: ["Network Overview", "Live posture across all regions · synthetic prototype data"],
-  inventory: ["Inventory & Cold Chain", "Unit-level stock, FIFO ordering and cold-chain status"],
-  emergency: ["Emergency Request", "Live walk-through of the brief's O-negative demo story"],
-  map: ["Supply Map & Routes", "Schematic view of banks, road and air routes"],
-  forecast: ["Demand Forecast", "AI shortage projection, 7-day horizon"],
+  overview: ["Executive Overview", "Live posture across all regions · synthetic prototype data"],
+  inventory: ["Smart Inventory Intelligence", "Stock status, expiry intelligence, min/max optimisation and FEFO"],
+  emergency: ["Emergency Response", "Register, prioritise, source and track urgent blood requirements"],
+  map: ["Supply Chain Intelligence", "Network map, source identification, redistribution and routes"],
+  forecast: ["AI Demand Forecasting", "Group, component, district and blood bank demand for 7 / 15 / 30 days"],
+  command: ["Command Centre", "State/UT-wide inventory, predicted shortages, wastage and supply chain performance"],
+  insights: ["AI Insights", "Data-backed statements — predictions kept separate from historical facts"],
+  assistant: ["AI Assistant", "Ask operational questions in plain language"],
+  transfers: ["Transfer Management", "Draft → approval → dispatch → transit → receipt → closure"],
+  ledger: ["Blockchain Ledger", "Tamper-evident record of blood unit and transfer events"],
+  integration: ["e-RaktKosh Integration", "Read-only integration readiness, mapping and imports"],
+  sync: ["Data Synchronisation", "Scheduled sync runs, history and error log"],
+  quality: ["Data Quality Monitoring", "Completeness, validity and timeliness per blood bank"],
+  reports: ["Reports", "Operational, inventory, supply-demand and prediction reports · PDF / Excel"],
+  performance: ["Performance Analytics", "District and supply chain performance"],
+  wastage: ["Wastage Analytics", "Recorded wastage and predicted wastage risk"],
+  users: ["User Management", "Accounts, roles and jurisdictions"],
+  roles: ["Role Management", "What each role can see and do"],
+  facilities: ["Facility Management", "Participating blood bank master"],
+  config: ["System Configuration", "Thresholds, rules, demo mode and security settings"],
+  audit: ["Audit Logs", "Critical operations and data access"],
   donors: ["Donor Network & Camps", "Recall alerts, camps and notifications"],
   app: ["Donor App Preview", "The user-facing mobile experience"],
   plan: ["Build Plan & Compliance", "What carries over into the React / Node build"],

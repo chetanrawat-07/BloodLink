@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { demoUsers, regions, groupMix } from "./data.js";
 import { useLang, LangSwitcher } from "./i18n.jsx";
+import { ROLE_LABELS } from "./access.js";
 import { IconOverview, IconEmergency, IconHeart, IconForecast, IconFile, IconSearch, IconTruck, IconCheckCircle } from "./icons.jsx";
+
+// Demo accounts grouped by who they represent, most senior first
+const DEMO_CLUSTERS = [
+  { label: "Health Department", roles: ["super", "official"] },
+  { label: "State & district administration", roles: ["state", "district"] },
+  { label: "Blood banks", roles: ["centre"] },
+  { label: "Hospitals", roles: ["hospital"] },
+  { label: "Donors", roles: ["donor"] },
+];
 
 const TAGLINES = [
   "Live network-wide stock visibility, minute by minute.",
@@ -109,8 +119,7 @@ export default function AuthPage({ auth, toast }) {
     heroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const demoLabel = loginTab === "centre" ? t("Blood Centre staff") : t("Donor");
-  const demoAccounts = demoUsers.filter((u) => u.role === loginTab);
+  const demoAccounts = demoUsers.filter((u) => (loginTab === "donor" ? u.role === "donor" : u.role !== "donor"));
 
   return (
     <div className="auth-page">
@@ -125,7 +134,7 @@ export default function AuthPage({ auth, toast }) {
             <div className="brand-mark">🩸</div>
             <h1>{t("Blood Link")}</h1>
             <p>
-              {t("Regional blood supply coordination across Jammu & Kashmir, Ladakh, Punjab, Himachal Pradesh and Haryana — one shared, real-time picture for every blood centre and donor.")}
+              {t("A connected blood management platform for hospitals, blood centres and donors — so the right blood reaches every patient, safely and on time.")}
             </p>
             <div className="auth-tagline-box">
               <p className="auth-tagline" key={taglineIdx}>
@@ -133,9 +142,9 @@ export default function AuthPage({ auth, toast }) {
               </p>
             </div>
             <ul className="auth-points">
-              <li>{t("Live network-wide stock visibility")}</li>
-              <li>{t("Emergency request routing between banks")}</li>
-              <li>{t("Cold-chain monitoring from collection to delivery")}</li>
+              <li>{t("Real-time blood availability across all centres")}</li>
+              <li>{t("Rapid emergency response for critical patients")}</li>
+              <li>{t("Safe, temperature-controlled supply from donor to patient")}</li>
             </ul>
           </div>
 
@@ -152,7 +161,7 @@ export default function AuthPage({ auth, toast }) {
                     className={`auth-tab${loginTab === "centre" ? " active" : ""}`}
                     onClick={() => setLoginTab("centre")}
                   >
-                    {t("Blood Centre Login")}
+                    {t("Staff & Officials Login")}
                   </button>
                   <button
                     type="button"
@@ -189,13 +198,27 @@ export default function AuthPage({ auth, toast }) {
                   </button>
                 </form>
                 <div className="auth-demo-hint">
-                  <div className="dh-label">{t("{role} demo accounts (password: demo123)", { role: demoLabel })}</div>
-                  {demoAccounts.map((u) => (
-                    <button key={u.id} type="button" className="auth-demo-row" onClick={() => fillDemo(u)}>
-                      <span>{u.name}</span>
-                      <span className="email">{u.email}</span>
-                    </button>
-                  ))}
+                  <label className="dh-label" htmlFor="demo-account">{t("Try a demo account (password: demo123)")}</label>
+                  <select
+                    id="demo-account"
+                    className="demo-select"
+                    value={demoAccounts.find((u) => u.email === loginEmail)?.id || ""}
+                    onChange={(e) => {
+                      const u = demoAccounts.find((x) => x.id === e.target.value);
+                      if (u) fillDemo(u);
+                    }}
+                  >
+                    <option value="">{t("Choose an account…")}</option>
+                    {DEMO_CLUSTERS.filter((c) => c.roles.some((r) => demoAccounts.some((u) => u.role === r))).map((c) => (
+                      <optgroup key={c.label} label={t(c.label)}>
+                        {demoAccounts.filter((u) => c.roles.includes(u.role)).map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name} — {t(ROLE_LABELS[u.role])}{u.facility ? `, ${u.facility}` : ""}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
                 </div>
                 <div className="auth-switch">
                   {t("New here?")}{" "}

@@ -1,5 +1,7 @@
 import { regions, groupMix, activity, camps } from "../data.js";
 import { useLang } from "../i18n.jsx";
+import { useModel } from "../store.js";
+import { analyseAll, daysLeft } from "../engine.js";
 
 const STATUS_PILL = { critical: ["bad", "Critical"], low: ["warn", "Low"], ok: ["ok", "Healthy"] };
 
@@ -7,13 +9,19 @@ export default function Overview({ regionFilter, setView }) {
   const { t } = useLang();
   const filteredRegions = regions.filter((r) => regionFilter === "all" || regionFilter === r.id);
   const sum = (k) => filteredRegions.reduce((n, r) => n + r[k], 0);
+  // live figures from the data layer (the rest of this page is the original static overview)
+  const model = useModel();
+  const ladakhONeg = analyseAll(model, { state: "ladakh", group: "O-", comp: "PRBC" });
+  const lehStock = ladakhONeg.reduce((n, a) => n + a.available, 0);
+  const lehMin = ladakhONeg.reduce((n, a) => n + a.minLevel, 0);
+  const expiring72 = analyseAll(model).reduce((n, a) => n + model.byKey.get(a.key).units.filter((u) => u.status === "Available").slice(0, a.available).filter((u) => daysLeft(u) <= 3).length, 0);
   const activeCamps = camps.filter((c) => c.status !== "Completed" && (regionFilter === "all" || c.region === regionFilter)).length;
 
   return (
     <>
       <div className="alert-banner">
-        🔴 <strong>{t("Critical:")}</strong>&nbsp;{t("O‑negative stock in Ladakh is 2 units against a 15‑unit reorder level.")}
-        <button onClick={() => setView("emergency")}>{t("View emergency request →")}</button>
+        🔴 <strong>{t("Critical:")}</strong>&nbsp;{t("O‑negative PRBC stock in Ladakh is {n} units against a combined minimum of {m}.", { n: lehStock, m: lehMin })}
+        <button onClick={() => setView("forecast", { state: "ladakh", group: "O-", comp: "PRBC" })}>{t("View forecast →")}</button>
       </div>
 
       <div className="grid cols-5">
@@ -33,7 +41,7 @@ export default function Overview({ regionFilter, setView }) {
           <div className="delta down">▲ {t("since yesterday")}</div>
         </div>
         <div className="kpi">
-          <div className="num">46</div>
+          <div className="num">{expiring72}</div>
           <div className="lbl">{t("Units expiring in 72h")}</div>
           <div className="delta down">{t("FIFO redistribution pending")}</div>
         </div>
