@@ -82,7 +82,7 @@ export function canTransfer(user, t, to) {
 export function canEmergency(user, r, to) {
   const scope = scopeOf(user);
   if (user.role === "super") return true;
-  if (to === "Closed") return (user.role === "hospital" && scope.facId === r.destFacId) || can(user, "emergency.review");
+  if (to === "Closed") return (user.role === "hospital" && (scope.facId === r.destFacId || scope.facId === r.reqFacId)) || can(user, "emergency.review");
   if (to === "Approved" || to === "Rejected") return can(user, "emergency.approve") && inScope(scope, r.destFacId);
   if (to === "Processing" || to === "Fulfilled") return user.role === "centre" && (scope.facId === r.source || scope.facId === r.destFacId);
   return can(user, "emergency.review") && (inScope(scope, r.destFacId) || (!!r.source && scope.facId === r.source));

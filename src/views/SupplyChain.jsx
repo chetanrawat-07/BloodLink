@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useModel, createTransfer } from "../store.js";
 import { scopeOf, whereOf, can } from "../access.js";
 import {
@@ -11,19 +11,27 @@ import RecCard from "./RecCard.jsx";
 
 const W = 560, H = 470;
 const BOUNDS = { latMax: 35.1, latMin: 29.8, lngMin: 73.8, lngMax: 78.2 };
-const px = (f) => ({
-  x: 20 + ((f.lng - BOUNDS.lngMin) / (BOUNDS.lngMax - BOUNDS.lngMin)) * (W - 40),
-  y: 20 + ((BOUNDS.latMax - f.lat) / (BOUNDS.latMax - BOUNDS.latMin)) * (H - 40),
-});
+// Web-Mercator world pixels at zoom Z, so facility dots line up with the basemap tiles.
+const Z = 7, TS = 256, WORLD = TS * 2 ** Z;
+const mx = (lng) => ((lng + 180) / 360) * WORLD;
+const my = (lat) => { const s = Math.sin((lat * Math.PI) / 180); return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * WORLD; };
+const X0 = mx(BOUNDS.lngMin), Y0 = my(BOUNDS.latMax);
+const K = Math.min((W - 40) / (mx(BOUNDS.lngMax) - X0), (H - 40) / (my(BOUNDS.latMin) - Y0));
+const OX = (W - (mx(BOUNDS.lngMax) - X0) * K) / 2, OY = (H - (my(BOUNDS.latMin) - Y0) * K) / 2;
+const px = (f) => ({ x: OX + (mx(f.lng) - X0) * K, y: OY + (my(f.lat) - Y0) * K });
+const TILES = [];
+for (let tx = Math.floor((X0 - OX / K) / TS); tx <= Math.floor((X0 + (W - OX) / K) / TS); tx++)
+  for (let ty = Math.floor((Y0 - OY / K) / TS); ty <= Math.floor((Y0 + (H - OY) / K) / TS); ty++)
+    TILES.push({ tx, ty, x: OX + (tx * TS - X0) * K, y: OY + (ty * TS - Y0) * K });
 const FILL = { critical: "var(--critical)", low: "var(--warning)", ok: "var(--success)", surplus: "var(--primary)", "low-volume": "var(--text-muted)" };
 const short = (name) => name.replace(" Blood Bank", "").replace(/, .*/, "").replace("Hospital", "Hosp.");
 
 function NetworkMap({ model, group, comp, focus, selected, onSelect, route }) {
   const { t } = useLang();
-  const statePos = { jk: [95, 120], ladakh: [400, 70], punjab: [150, 360] };
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={t("Blood bank network map")} style={{ maxHeight: 470 }}>
-      {STATES.map((s) => <text key={s.id} x={statePos[s.id][0]} y={statePos[s.id][1]} fontSize="13" fontWeight="700" fill="var(--border)">{t(s.name)}</text>)}
+      {TILES.map((tl) => <image key={`${tl.tx}-${tl.ty}`} href={`https://tile.openstreetmap.org/${Z}/${tl.tx}/${tl.ty}.png`} x={tl.x} y={tl.y} width={TS * K + 0.5} height={TS * K + 0.5} opacity="0.75" />)}
+      <text x={W - 6} y={H - 6} fontSize="8" textAnchor="end" fill="var(--text-muted)">© OpenStreetMap contributors</text>
       {route && (() => {
         const a = px(facById[route.from]), b = px(facById[route.to]);
         return <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--accent)" strokeWidth="2.5" strokeDasharray={route.mode === "air" ? "3 5" : "0"} markerEnd="url(#arrow)" />;
@@ -37,7 +45,7 @@ function NetworkMap({ model, group, comp, focus, selected, onSelect, route }) {
         return (
           <g key={f.id} className="clickable" onClick={() => onSelect(f.id)} opacity={dim ? 0.25 : 1}>
             <circle cx={p.x} cy={p.y} r={r} fill={FILL[a.status]} opacity="0.85" stroke={selected === f.id ? "var(--ink)" : "var(--surface)"} strokeWidth={selected === f.id ? 3 : 2} />
-            <text x={p.x + r + 3} y={p.y + 3} fontSize="10" fill="var(--text)">{short(f.name)} · {a.available}</text>
+            <text x={p.x + r + 3} y={p.y + 3} fontSize="10" fill="#222" stroke="#fff" strokeWidth="3" paintOrder="stroke">{short(f.name)} · {a.available}</text>
             <title>{`${f.name}\n${group} ${compById[comp].name}: ${a.available} available (min ${a.minLevel}, max ${a.maxLevel})\n${t(a.status)}`}</title>
           </g>
         );
@@ -61,6 +69,7 @@ export default function SupplyChainPanels({ user, params = {}, setView, toast })
   const [pickedSource, setPickedSource] = useState(null);
   const [mapRoute, setMapRoute] = useState(null);
   const [prio, setPrio] = useState("all");
+  const sourcesRef = useRef(null);
 
   const focus = (f) => (state === "all" || f.state === state) && (district === "all" || f.district === district);
   const sel = analyseCell(model, cellKey(selected, group, comp));
@@ -122,11 +131,11 @@ export default function SupplyChainPanels({ user, params = {}, setView, toast })
               return <tr key={fac.id} className="clickable" onClick={() => setSelected(fac.id)}><td>{fac.name}</td><td>{km} km</td><td>{a.available}</td><td>{r.best ? `${r.best.mode} ~${fmtH(r.best.hours)}` : <span className="pill bad">{t("no route")}</span>}</td></tr>;
             })}</tbody>
           </table></div>
-          <button className="btn primary sm" style={{ marginTop: 12 }} onClick={() => { setDest(selected); setPickedSource(null); }}>{t("Find supporting sources for this facility")}</button>
+          <button className="btn primary sm" style={{ marginTop: 12 }} onClick={() => { setDest(selected); setPickedSource(null); setMapRoute(null); sourcesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>{t("Find supporting sources for this facility")}</button>
         </div>
       </div>
 
-      <div className="panel">
+      <div className="panel" ref={sourcesRef}>
         <div className="panel-head">
           <h3>{t("Intelligent source identification")}</h3>
           <span className="hint">{t("Ranks sources by route feasibility, releasable stock and travel time")}</span>

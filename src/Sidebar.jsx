@@ -6,7 +6,6 @@ import {
   IconForecast,
   IconHeart,
   IconPhone,
-  IconPlan,
   IconFile,
   IconTruck,
   IconChain,
@@ -62,9 +61,6 @@ const STAFF_NAV = [
     { view: "facilities", label: "Facility Management", Icon: IconShield, roles: ADMINS },
     { view: "config", label: "System Configuration", Icon: IconShield, roles: ["super", "state"] },
     { view: "audit", label: "Audit Logs", Icon: IconShield, roles: ADMINS },
-  ]},
-  { group: "Project", items: [
-    { view: "plan", label: "Build Plan & Compliance", Icon: IconPlan, roles: ["super", "centre"] },
   ]},
 ];
 

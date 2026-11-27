@@ -40,7 +40,7 @@ function NewRequest({ user, toast, onCreated }) {
     const requiredBy = Date.parse(f.requiredBy + ":00+05:30");
     if (!Number.isFinite(requiredBy)) return setErr(t("Enter a valid required date and time."));
     setErr("");
-    const r = createEmergency({ ...f, qty, requiredBy, hospital: facById[f.destFacId].name, department: f.department.trim(), contact: f.contact.trim(), location: f.location.trim() }, user);
+    const r = createEmergency({ ...f, reqFacId: fac?.id, qty, requiredBy, hospital: facById[f.destFacId].name, department: f.department.trim(), contact: f.contact.trim(), location: f.location.trim() }, user);
     toast(t("Emergency request {id} submitted.", { id: r.id }));
     onCreated(r.id);
   }
@@ -50,7 +50,7 @@ function NewRequest({ user, toast, onCreated }) {
       <div className="panel-head"><h3>{t("Register emergency blood requirement")}</h3><span className="hint">{t("Minimum necessary personal information only")}</span></div>
       {err && <div className="auth-error">{err}</div>}
       <div className="form-grid">
-        <label>{t("Hospital")}<select value={f.destFacId} onChange={set("destFacId")} disabled={!!fac}><option value="">—</option>{FACILITIES.filter((x) => scope.level === "all" || whereOf(scope)(x)).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+        <label>{t("Hospital")}<select value={f.destFacId} onChange={set("destFacId")}><option value="">—</option>{FACILITIES.filter((x) => scope.level === "all" || (fac ? x.district === fac.district : whereOf(scope)(x))).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
         <label>{t("Requesting department")}<input value={f.department} maxLength={60} onChange={set("department")} placeholder="Trauma & Emergency" /></label>
         <label>{t("Patient / reference ID (no names)")}<input value={f.patientRef} maxLength={24} onChange={set("patientRef")} placeholder="LEH-TR-88214" /></label>
         <label>{t("Blood group")}<select value={f.group} onChange={set("group")}>{GROUPS.map((g) => <option key={g}>{g}</option>)}</select></label>
@@ -154,7 +154,7 @@ export default function Emergency({ user, params = {}, toast }) {
   const [qf, setQf] = useState("open");
 
   // hospitals and blood banks see requests to/from their facility; officials see their jurisdiction
-  const mine = all.filter((r) => where(facById[r.destFacId]) || (r.source && scope.facId === r.source));
+  const mine = all.filter((r) => where(facById[r.destFacId]) || (scope.facId && r.reqFacId === scope.facId) || (r.source && scope.facId === r.source));
   const queue = mine
     .filter((r) => (qf === "open" ? OPEN(r) : qf === "overdue" ? OPEN(r) && clock > r.requiredBy : qf === "all" ? true : r.urgency === qf))
     .sort((a, b) => (OPEN(b) - OPEN(a)) || URGENCY_RANK[a.urgency] - URGENCY_RANK[b.urgency] || a.requiredBy - b.requiredBy);

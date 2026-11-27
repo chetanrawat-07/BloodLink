@@ -9,7 +9,6 @@ import SupplyMap from "./views/SupplyMap.jsx";
 import Forecast from "./views/Forecast.jsx";
 import Donors from "./views/Donors.jsx";
 import DonorApp from "./views/DonorApp.jsx";
-import BuildPlan from "./views/BuildPlan.jsx";
 import DonorHome from "./views/DonorHome.jsx";
 import Camps from "./views/Camps.jsx";
 import Centres from "./views/Centres.jsx";
@@ -111,7 +110,6 @@ export default function Dashboard({ user, onLogout, toast }) {
             )}
             {view === "donors" && <Donors regionFilter={regionFilter} toast={toast} />}
             {view === "app" && <DonorApp />}
-            {view === "plan" && <BuildPlan />}
             {view === "myDash" && <DonorHome user={user} setView={setView} />}
             {view === "camps" && <Camps regionFilter={regionFilter} toast={toast} />}
             {view === "centres" && <Centres regionFilter={regionFilter} />}

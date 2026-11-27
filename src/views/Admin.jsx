@@ -80,17 +80,33 @@ function Users({ user, toast }) {
   );
 }
 
+const ACTION_LABELS = {
+  "transfer.create": "Request blood from another centre",
+  "transfer.approve": "Approve a blood transfer",
+  "transfer.dispatch": "Send out blood units",
+  "transfer.receive": "Confirm blood units received",
+  "emergency.create": "Raise an emergency blood request",
+  "emergency.review": "Check emergency requests",
+  "emergency.approve": "Approve emergency requests",
+  "integration.run": "Sync data with e-RaktKosh",
+  "integration.configure": "Set up the e-RaktKosh connection",
+  "config.edit": "Change system settings",
+  "users.manage": "Add or remove users",
+  "reports.export": "Download reports",
+  "ledger.verify": "Verify the transfer record",
+};
+
 function Roles() {
   const { t } = useLang();
   const scopeText = { super: "Everything", state: "Own State/UT", district: "Own district", centre: "Own blood bank", hospital: "Own hospital's requests", official: "All States/UTs, read-only analytics" };
   return (
     <div className="panel">
-      <div className="panel-head"><h3>{t("Role permissions matrix")}</h3><span className="hint">{t("Defined in code (access.js); jurisdiction is enforced on every list and action")}</span></div>
+      <div className="panel-head"><h3>{t("Who can do what")}</h3><span className="hint">{t("Each role only sees and acts on its own area")}</span></div>
       <div className="table-wrap"><table className="data">
-        <thead><tr><th>{t("Action")}</th>{STAFF_ROLES.map((r) => <th key={r}>{t(ROLE_LABELS[r])}</th>)}</tr></thead>
+        <thead><tr><th>{t("Task")}</th>{STAFF_ROLES.map((r) => <th key={r}>{t(ROLE_LABELS[r])}</th>)}</tr></thead>
         <tbody>
-          <tr><td><strong>{t("Data scope")}</strong></td>{STAFF_ROLES.map((r) => <td key={r} className="hint">{t(scopeText[r])}</td>)}</tr>
-          {Object.entries(PERMISSIONS).map(([a, roles]) => <tr key={a}><td className="mono">{a}</td>{STAFF_ROLES.map((r) => <td key={r}>{roles.includes(r) ? "✓" : "—"}</td>)}</tr>)}
+          <tr><td><strong>{t("What they can see")}</strong></td>{STAFF_ROLES.map((r) => <td key={r} className="hint">{t(scopeText[r])}</td>)}</tr>
+          {Object.entries(PERMISSIONS).map(([a, roles]) => <tr key={a}><td>{t(ACTION_LABELS[a] || a)}</td>{STAFF_ROLES.map((r) => <td key={r}>{roles.includes(r) ? <span title={t("Allowed")}>✓</span> : <span title={t("Not allowed")}>—</span>}</td>)}</tr>)}
         </tbody>
       </table></div>
     </div>
