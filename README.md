@@ -53,8 +53,30 @@ Password for both: `demo123`
 
 | Role | Email |
 |---|---|
-| Blood Centre staff | `centre@bloodlink.demo` |
+| Blood Bank Administrator (GMC Jammu) | `centre@bloodlink.demo` |
+| Blood Bank Administrator (SNM Leh) | `leh.bank@bloodlink.demo` |
+| Super Administrator | `super@bloodlink.demo` |
+| State/UT Administrator (Ladakh) | `ladakh.admin@bloodlink.demo` |
+| District Administrator (Jammu) | `jammu.district@bloodlink.demo` |
+| Hospital / Requesting Authority (SNM Leh) | `hospital@bloodlink.demo` |
+| Health Department Official | `official@bloodlink.demo` |
 | Donor | `donor@bloodlink.demo` |
+
+All staff and official roles use the "Staff & Officials Login" tab.
+
+## AI supply-chain intelligence modules
+
+Command Centre, AI Demand Forecasting, Smart Inventory Intelligence, AI Insights,
+AI Assistant, Supply Chain Intelligence, Emergency Response, Transfer Management,
+Blockchain Ledger, e-RaktKosh Integration, Reports and Administration. All of them
+run on a **static, fixed-seed simulated dataset** (`src/networkData.js`). The
+analytics live in `src/engine.js`, the ledger is a simulated hash chain
+(`src/ledger.js`), and workflows are stored in localStorage (`src/store.js`).
+e-RaktKosh is **not** connected.
+
+```bash
+npm test   # engine, ledger, access control, assistant and import validation checks
+```
 
 Or use "Create an account" on the login page to make your own.
 

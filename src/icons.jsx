@@ -112,3 +112,55 @@ export function IconCheckCircle({ size = 19 }) {
     </svg>
   );
 }
+
+export function IconChain({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none">
+      <rect x="1.8" y="6.2" width="7" height="5.6" rx="2.8" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="9.2" y="6.2" width="7" height="5.6" rx="2.8" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+export function IconChat({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none">
+      <path d="M2.5 3.5h13v8.5H8l-3.5 3v-3h-2V3.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconSpark({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none">
+      <path d="M9 2l1.6 4.4L15 8l-4.4 1.6L9 14l-1.6-4.4L3 8l4.4-1.6L9 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconSync({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none">
+      <path d="M3 8a6 6 0 0 1 10.5-3.5M15 10a6 6 0 0 1-10.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M13.8 1.8v2.9h-2.9M4.2 16.2v-2.9h2.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconShield({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none">
+      <path d="M9 1.8l6 2.4v4.3c0 3.7-2.5 6.4-6 7.7-3.5-1.3-6-4-6-7.7V4.2l6-2.4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconTarget({ size = 16 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 18 18" fill="none">
+      <circle cx="9" cy="9" r="6.6" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="9" cy="9" r="3.2" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="9" cy="9" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
